@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-27
+
+### Fixed
+
+- Allow explicit manual publication of an existing stable tag when its push event does not start a workflow, retaining all native verification and immutable-artifact checks.
+
 ## [0.1.1] - 2026-11-27
 
 ### Fixed
