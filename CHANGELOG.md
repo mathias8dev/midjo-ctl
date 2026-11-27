@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-27
+
+### Fixed
+
+- Initialize the native release workflow on the default branch while retaining verification on all six targets before publication.
+
 ## [0.1.0] - 2026-11-27
 
 ### Added

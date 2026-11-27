@@ -1,9 +1,8 @@
-name: Build and release midjoctl
-'on':
-  workflow_dispatch: null
+name: Midjo CLI native release
+on:
+  workflow_dispatch:
   push:
-    tags:
-    - v*
+    tags: ['v*']
 
 permissions:
   contents: read
