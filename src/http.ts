@@ -134,8 +134,10 @@ export class MidjoClient {
     headers.set("Authorization", `Bearer ${session.accessToken}`);
     headers.set("User-Agent", `midjoctl/${VERSION}`);
     headers.set("Accept", "application/json");
+    // Springdoc's first catalog generation can exceed the ordinary API budget.
+    const timeout = AbortSignal.timeout(url.pathname === "/api/auth/native/openapi" ? 120_000 : 60_000);
     return fetchResponse(url, {
-      ...init, headers, redirect: "error", signal: init.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(60_000)]) : AbortSignal.timeout(60_000),
+      ...init, headers, redirect: "error", signal: init.signal ? AbortSignal.any([init.signal, timeout]) : timeout,
     }, this.fetcher);
   }
 
