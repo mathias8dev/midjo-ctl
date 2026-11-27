@@ -277,6 +277,33 @@ test("company commands use bounded discovery and explicit targets without saving
   await assert.rejects(run(cliCommand, [...cliPrefix, "companies", "list", "--limit", "101"], { env: f.env }));
 });
 
+test("cold catalog requests have a longer bounded deadline and preserve cancellation", async t => {
+  const f = await fixture(t);
+  const deadlines = [];
+  const controllers = [];
+  t.mock.method(AbortSignal, "timeout", milliseconds => {
+    deadlines.push(milliseconds);
+    const controller = new AbortController();
+    controllers.push(controller);
+    return controller.signal;
+  });
+  let cancelNext;
+  const client = new MidjoClient(f.path, async (url, init) => {
+    if (!cancelNext) return new Response(JSON.stringify(spec), { headers: { "content-type": "application/json" } });
+    const rejected = new Promise((_, reject) => init.signal.addEventListener("abort", () => reject(init.signal.reason), { once: true }));
+    cancelNext();
+    return rejected;
+  });
+  await OperationCatalog.load(client);
+  await client.request("/api/admin/operators:search");
+  assert.deepEqual(deadlines, [120_000, 60_000]);
+  cancelNext = () => controllers.at(-1).abort(new DOMException("Deadline exceeded", "TimeoutError"));
+  await assert.rejects(OperationCatalog.load(client), { name: "TimeoutError" });
+  const caller = new AbortController();
+  cancelNext = () => caller.abort();
+  await assert.rejects(client.request("/api/auth/native/openapi", { signal: caller.signal }), { name: "AbortError" });
+});
+
 test("direct API UX resolves literal routes and explicit company IDs through the same contract", async t => {
   const f = await fixture(t);
   const catalog = await OperationCatalog.load(f.client);

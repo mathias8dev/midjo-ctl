@@ -55,6 +55,10 @@ restricted by company status. Listing never grants permission to perform an acti
 
 ## Discover and call any business operation
 
+Business commands resolve operations through the server's current OpenAPI
+catalog. Catalog requests allow up to 120 seconds for cold generation; ordinary
+API requests remain bounded to 60 seconds. Neither is retried automatically.
+
 ```sh
 midjoctl operations departures --profile preprod
 midjoctl schema OPERATION_ID --profile preprod

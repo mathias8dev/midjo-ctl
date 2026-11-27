@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-11-27
+
+### Fixed
+
+- Allow 120 seconds for cold OpenAPI generation while retaining current server contracts, 60-second ordinary API deadlines and explicit cancellation.
+
 ## [0.1.2] - 2026-11-27
 
 ### Fixed
