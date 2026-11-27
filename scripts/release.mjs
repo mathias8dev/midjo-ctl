@@ -9,12 +9,19 @@ import { TARGETS } from "./targets.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const STABLE_VERSION = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/;
-export function assertReleaseContext(environment, version) {
+export function assertReleaseContext(environment, version, event = {}, publication = true) {
+  const tagEvent = environment.GITHUB_EVENT_NAME === "push" ||
+    (environment.GITHUB_EVENT_NAME === "workflow_dispatch" &&
+      (!publication || event.inputs?.publish === "true"));
   if (!STABLE_VERSION.test(version) || environment.GITHUB_REPOSITORY !== "mathias8dev/midjo-ctl" ||
-      environment.GITHUB_EVENT_NAME !== "push" || environment.GITHUB_REF !== `refs/tags/v${version}` ||
+      !tagEvent || environment.GITHUB_REF !== `refs/tags/v${version}` ||
       !/^[a-f0-9]{40}$/.test(environment.GITHUB_SHA ?? "")) {
-    throw new Error("Publication requires a pushed vX.Y.Z tag matching package.json in midjo-ctl and an exact source revision");
+    throw new Error("Publication requires a pushed vX.Y.Z tag or explicit manual publication of that stable tag, matching package.json and an exact source revision");
   }
+}
+async function workflowEvent(environment) {
+  if (environment.GITHUB_EVENT_NAME !== "workflow_dispatch") return {};
+  return JSON.parse(await readFile(environment.GITHUB_EVENT_PATH, "utf8"));
 }
 export async function sha256(path) {
   const hash = createHash("sha256");
@@ -48,7 +55,7 @@ function gh(args, allowMissing = false) {
 export async function publish(environment = process.env) {
   const revision = environment.GITHUB_SHA;
   const { version } = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
-  assertReleaseContext(environment, version);
+  assertReleaseContext(environment, version, await workflowEvent(environment));
   const directory = join(root, "dist/releases");
   const files = await collectArtifacts(directory, version, revision);
   for (const name of ["install.sh", "install.ps1"]) {
@@ -93,7 +100,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   switch (process.argv[2]) {
     case "--check-tag": {
       const { version } = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
-      assertReleaseContext(process.env, version);
+      assertReleaseContext(process.env, version, await workflowEvent(process.env), false);
       console.log(`Release tag v${version} matches package.json`);
       break;
     }

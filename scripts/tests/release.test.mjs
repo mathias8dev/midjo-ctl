@@ -39,3 +39,13 @@ test("release accepts only a pushed stable tag matching the package version and 
   assert.throws(() => assertReleaseContext(environment, "0.1.0-beta.1"), /pushed vX.Y.Z tag/);
   await assert.rejects(publish({}), /pushed vX.Y.Z tag/);
 });
+
+test("manual publication requires an explicit choice and an existing matching stable tag", () => {
+  const environment = { GITHUB_EVENT_NAME: "workflow_dispatch", GITHUB_REF: "refs/tags/v0.1.0",
+    GITHUB_REPOSITORY: "mathias8dev/midjo-ctl", GITHUB_SHA: "a".repeat(40) };
+  assert.throws(() => assertReleaseContext(environment, "0.1.0", { inputs: { publish: "false" } }));
+  assert.throws(() => assertReleaseContext(environment, "0.1.0", { inputs: { publish: true } }));
+  assert.doesNotThrow(() => assertReleaseContext(environment, "0.1.0", { inputs: { publish: "true" } }));
+  assert.doesNotThrow(() => assertReleaseContext(environment, "0.1.0", {}, false));
+  assert.throws(() => assertReleaseContext({ ...environment, GITHUB_REF: "refs/heads/develop" }, "0.1.0", { inputs: { publish: "true" } }));
+});
