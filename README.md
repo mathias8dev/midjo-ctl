@@ -7,7 +7,7 @@ action and target company. The CLI never saves a selected company or business co
 ## Install
 
 ```sh
-mise use -g github:mathias8dev/midjo-ctl@0.1.1
+mise use -g github:mathias8dev/midjo-ctl@0.1.2
 midjoctl --version
 ```
 

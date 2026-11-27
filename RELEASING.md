@@ -62,3 +62,16 @@ receipt and immutable tag to identify what was actually delivered.
 The release script is synchronized verbatim from
 `mathias-engineering/scripts/release.py`. Its behavior tests live in that
 repository. It never imports a sibling checkout at runtime.
+
+If GitHub does not deliver a tag push event, keep that tag unchanged. The native
+workflow also accepts an explicit manual run **on the matching stable tag**, with
+`publish=true`. Branch runs and manual runs without that choice only verify;
+publication still requires all six native builds/tests, exact source manifests,
+checksums, tag identity and immutable existing-asset checks. For example:
+
+```sh
+gh workflow run ci.yml --ref vX.Y.Z -f publish=true
+```
+
+This recovery path must already exist in the tagged source. Never change a tag
+or forge a push event to retry a release.

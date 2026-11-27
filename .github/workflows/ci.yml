@@ -1,6 +1,11 @@
 name: Midjo CLI native release
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish this existing stable tag after all six native checks
+        type: boolean
+        default: false
   push:
     tags: ['v*']
 
@@ -47,7 +52,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
   publish:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish))
     needs: [build, release-metadata]
     runs-on: ubuntu-24.04
     permissions:
